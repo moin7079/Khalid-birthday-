@@ -13,32 +13,35 @@
     font-family: Georgia, 'Times New Roman', serif;
   }
 
-  /* INTRO - total ~6.7s, then card reveals */
+  /* INTRO - JS controlled, one stage visible at a time */
   .intro {
     position: fixed;
     top:0; left:0; right:0; bottom:0;
     display:flex;
-    flex-direction:column;
     align-items:center;
     justify-content:center;
     background:#faf6f0;
     z-index:100;
-    animation: introOut 0.9s ease-in-out forwards;
-    animation-delay: 6.1s;
+    opacity:1;
+    transition: opacity 0.9s ease-in-out, visibility 0.9s;
   }
-  @keyframes introOut {
-    0%   { opacity:1; }
-    100% { opacity:0; visibility:hidden; }
+  .intro.hide {
+    opacity:0;
+    visibility:hidden;
   }
 
-  /* Stage 1: cake draws itself (0 - 1.8s) */
-  .cake-stage {
+  .stage {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
     opacity:0;
-    animation: stageFade 0.4s ease forwards, stageFadeOut 0.4s ease forwards;
-    animation-delay: 0s, 1.8s;
+    transition: opacity 0.4s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
   }
-  @keyframes stageFade { to { opacity:1; } }
-  @keyframes stageFadeOut { to { opacity:0; } }
+  .stage.show { opacity:1; }
 
   .cake-icon { width:70px; height:70px; }
   .cake-icon .stroke {
@@ -49,54 +52,29 @@
     stroke-linejoin:round;
     stroke-dasharray:240;
     stroke-dashoffset:240;
-    animation: drawCake 1.5s ease forwards;
+    transition: stroke-dashoffset 1.4s ease;
   }
-  @keyframes drawCake { to { stroke-dashoffset:0; } }
+  .stage.show .cake-icon .stroke { stroke-dashoffset:0; }
   .cake-icon .flame {
     fill:#d9bd7a;
     opacity:0;
-    animation: flameAppear 0.4s ease forwards, flicker 1.2s ease-in-out infinite;
-    animation-delay: 1s, 1s;
+    transition: opacity 0.4s ease 0.9s;
     transform-origin:50% 100%;
+    animation: flicker 1.2s ease-in-out infinite;
   }
-  @keyframes flameAppear { to { opacity:1; } }
+  .stage.show .cake-icon .flame { opacity:1; }
   @keyframes flicker {
     0%,100% { transform:scaleY(1); }
     50%     { transform:scaleY(1.15); }
   }
 
-  /* Stage 2: name writes itself (1.8s - 3.6s) */
-  .name-stage {
-    position:absolute;
-    opacity:0;
-    animation: stageFade 0.3s ease forwards, stageFadeOut 0.3s ease forwards;
-    animation-delay: 1.8s, 3.6s;
-  }
   .script-name {
     font-family: 'Brush Script MT', cursive, Georgia, serif;
     font-style:italic;
     font-size:2.6em;
     color:#b8693f;
-    white-space:nowrap;
-    overflow:hidden;
-    width:0;
-    border-right:1px solid #c9a24b;
-    animation: typeName 1.5s steps(6,end) forwards, blinkCursor 0.6s step-end infinite;
-    animation-delay: 1.9s, 1.9s;
   }
-  @keyframes typeName { to { width:2.4em; } }
-  @keyframes blinkCursor { 50% { border-color:transparent; } }
 
-  /* Stage 3: wax seal breaks open (3.6s - 5.0s) */
-  .seal-stage {
-    position:absolute;
-    opacity:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    animation: stageFade 0.3s ease forwards;
-    animation-delay: 3.6s;
-  }
   .seal {
     width:64px;
     height:64px;
@@ -109,25 +87,16 @@
     color:#f3e3c8;
     font-size:1.4em;
     font-family:Georgia, serif;
-    animation: sealPop 0.4s ease forwards, sealBreak 0.6s ease forwards;
-    animation-delay: 3.65s, 4.5s;
+    transition: transform 0.6s ease, opacity 0.6s ease;
   }
-  @keyframes sealPop {
-    0% { transform:scale(0.5); opacity:0; }
-    100% { transform:scale(1); opacity:1; }
-  }
-  @keyframes sealBreak {
-    0%   { transform:scale(1) rotate(0deg); opacity:1; clip-path: circle(50% at 50% 50%); }
-    100% { transform:scale(1.6) rotate(8deg); opacity:0; clip-path: circle(80% at 50% 50%); }
+  .seal.crack {
+    transform: scale(1.6) rotate(8deg);
+    opacity:0;
   }
 
-  /* Stage 4: confetti/balloon burst (5.0s - 6.1s) */
   .burst-stage {
     position:absolute;
     inset:0;
-    opacity:0;
-    animation: stageFade 0.3s ease forwards;
-    animation-delay: 5.0s;
     pointer-events:none;
   }
   .burst-confetti {
@@ -137,11 +106,11 @@
     width:8px;
     height:8px;
     opacity:0;
-    animation: burstOut 1s ease-out forwards;
+    transition: transform 1s ease-out, opacity 1s ease-out;
   }
-  @keyframes burstOut {
-    0%   { opacity:1; transform: translate(-50%,-50%) translate(0,0) rotate(0deg); }
-    100% { opacity:0; transform: translate(-50%,-50%) translate(var(--bx), var(--by)) rotate(360deg); }
+  .burst-confetti.go {
+    opacity:0;
+    transform: translate(-50%,-50%) translate(var(--bx), var(--by)) rotate(360deg);
   }
   .burst-balloon {
     position:absolute;
@@ -149,11 +118,11 @@
     left:50%;
     font-size:1.8em;
     opacity:0;
-    animation: balloonOut 1.1s ease-out forwards;
+    transition: transform 1.1s ease-out, opacity 1.1s ease-out;
   }
-  @keyframes balloonOut {
-    0%   { opacity:1; transform: translate(-50%,-50%) translate(0,0) scale(0.6); }
-    100% { opacity:0; transform: translate(-50%,-50%) translate(var(--bx), var(--by)) scale(1); }
+  .burst-balloon.go {
+    opacity:0;
+    transform: translate(-50%,-50%) translate(var(--bx), var(--by)) scale(1);
   }
 
   /* CARD - hidden until intro is gone, then animates in */
@@ -173,12 +142,11 @@
     text-align:center;
     opacity:0;
     transform:translateY(25px);
-    animation: cardIn 1s ease forwards;
-    animation-delay: 6.9s;
+    transition: opacity 1s ease, transform 1s ease;
   }
-  @keyframes cardIn {
-    from { opacity:0; transform:translateY(25px); }
-    to   { opacity:1; transform:translateY(0); }
+  .card.show {
+    opacity:1;
+    transform:translateY(0);
   }
 
   .line {
@@ -240,8 +208,8 @@
 </head>
 <body>
 
-<div class="intro">
-  <div class="cake-stage">
+<div class="intro" id="intro">
+  <div class="stage" id="stage1">
     <svg class="cake-icon" viewBox="0 0 100 100">
       <ellipse class="flame" cx="50" cy="20" rx="3.4" ry="6.5"/>
       <line class="stroke" x1="50" y1="26" x2="50" y2="38"/>
@@ -250,17 +218,17 @@
       <line class="stroke" x1="14" y1="78" x2="86" y2="78"/>
     </svg>
   </div>
-  <div class="name-stage">
+  <div class="stage" id="stage2">
     <div class="script-name">Khalid</div>
   </div>
-  <div class="seal-stage">
-    <div class="seal">K</div>
+  <div class="stage" id="stage3">
+    <div class="seal" id="sealEl">K</div>
   </div>
   <div class="burst-stage" id="burstStage"></div>
 </div>
 
 <div class="card-wrap">
-  <div class="card">
+  <div class="card" id="cardEl">
     <div class="line"></div>
     <h1>Happy Birthday, <span>Khalid</span></h1>
     <h2>"Lucky" 🍀</h2>
@@ -278,31 +246,58 @@
 </div>
 
 <script>
+  const stage1 = document.getElementById('stage1');
+  const stage2 = document.getElementById('stage2');
+  const stage3 = document.getElementById('stage3');
+  const sealEl = document.getElementById('sealEl');
   const burst = document.getElementById('burstStage');
-  const colors = ['#c9a24b','#b8693f','#b87b7b','#7a8f6e','#d9bd7a'];
-  for (let i=0;i<24;i++){
-    const c = document.createElement('div');
-    c.className='burst-confetti';
-    const angle = Math.random()*2*Math.PI;
-    const dist = 120 + Math.random()*140;
-    c.style.setProperty('--bx', Math.cos(angle)*dist + 'px');
-    c.style.setProperty('--by', Math.sin(angle)*dist + 'px');
-    c.style.background = colors[Math.floor(Math.random()*colors.length)];
-    c.style.animationDelay = (Math.random()*0.3)+'s';
-    burst.appendChild(c);
+  const intro = document.getElementById('intro');
+  const cardEl = document.getElementById('cardEl');
+
+  function spawnBurst(){
+    const colors = ['#c9a24b','#b8693f','#b87b7b','#7a8f6e','#d9bd7a'];
+    for (let i=0;i<24;i++){
+      const c = document.createElement('div');
+      c.className='burst-confetti';
+      const angle = Math.random()*2*Math.PI;
+      const dist = 120 + Math.random()*140;
+      c.style.setProperty('--bx', Math.cos(angle)*dist + 'px');
+      c.style.setProperty('--by', Math.sin(angle)*dist + 'px');
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      burst.appendChild(c);
+    }
+    const balloonEmojis = ['🎈','🎈','🎈'];
+    for (let i=0;i<6;i++){
+      const b = document.createElement('div');
+      b.className='burst-balloon';
+      b.textContent = balloonEmojis[Math.floor(Math.random()*balloonEmojis.length)];
+      const angle = Math.random()*2*Math.PI;
+      const dist = 100 + Math.random()*100;
+      b.style.setProperty('--bx', Math.cos(angle)*dist + 'px');
+      b.style.setProperty('--by', (Math.sin(angle)*dist - 60) + 'px');
+      burst.appendChild(b);
+    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.burst-confetti, .burst-balloon').forEach(el => {
+          el.style.opacity = '1';
+          el.classList.add('go');
+        });
+      });
+    });
   }
-  const balloonEmojis = ['🎈','🎈','🎈'];
-  for (let i=0;i<6;i++){
-    const b = document.createElement('div');
-    b.className='burst-balloon';
-    b.textContent = balloonEmojis[Math.floor(Math.random()*balloonEmojis.length)];
-    const angle = Math.random()*2*Math.PI;
-    const dist = 100 + Math.random()*100;
-    b.style.setProperty('--bx', Math.cos(angle)*dist + 'px');
-    b.style.setProperty('--by', (Math.sin(angle)*dist - 60) + 'px');
-    b.style.animationDelay = (Math.random()*0.3)+'s';
-    burst.appendChild(b);
-  }
+
+  // Sequence timeline (ms)
+  setTimeout(() => stage1.classList.add('show'), 100);                 // cake draws in
+  setTimeout(() => stage1.classList.remove('show'), 1800);             // cake fades out
+  setTimeout(() => stage2.classList.add('show'), 1900);                // name fades in
+  setTimeout(() => stage2.classList.remove('show'), 3600);             // name fades out
+  setTimeout(() => stage3.classList.add('show'), 3700);                // seal pops in
+  setTimeout(() => sealEl.classList.add('crack'), 4600);               // seal breaks
+  setTimeout(() => stage3.classList.remove('show'), 5300);             // seal stage fades
+  setTimeout(spawnBurst, 5300);                                        // confetti/balloon burst
+  setTimeout(() => intro.classList.add('hide'), 6300);                 // whole intro fades out
+  setTimeout(() => cardEl.classList.add('show'), 7000);                // card reveals
 
   const effects = document.getElementById('effects');
   for (let i=0;i<14;i++){
@@ -317,3 +312,4 @@
 
 </body>
 </html>
+
